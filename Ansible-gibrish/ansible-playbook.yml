@@ -1,0 +1,37 @@
+---
+- name: Webservers Dev
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Installing apache
+      yum:
+        name: httpd
+        state: present
+
+    - name: Installing tree
+      yum:
+        name: tree
+        state: present
+
+    - name: Starting httpd
+      service:
+        name: httpd
+        state: restarted
+
+- name: DB Dev
+  hosts: dbservers
+  become: true
+
+  tasks:
+    - name: Installing MariaDB
+      yum:
+        name: mariadb-server
+        state: present
+      notify: restarting_mariadb  # Notifying a handler
+
+  handlers:
+    - name: restarting_mariadb
+      service:
+        name: mariadb
+        state: restarted

@@ -1,0 +1,67 @@
+---
+- name: Webservers Dev
+  hosts: webservers
+  become: true
+  vars:
+    db_name: Newone
+    db_user: ganesh
+    db_password: 123456
+
+  tasks:
+    - name: Installing apache
+      yum:
+        name: httpd
+        state: present
+    - name: Installing tree
+      yum:
+        name: tree
+        state: present
+    - name: Starting http
+      service :
+        name: httpd
+        state: restarted
+- name: DB Dev
+  hosts: dbservers
+  become: true
+  vars:
+    db_name: Newone
+    db_user: ganesh
+    db_password: 123456
+
+
+  tasks:
+    - name: Installing Mariadb
+      yum:
+        name: mariadb-server
+        state: present
+      notify: restarting_mariadb
+    - name: Start and enable MariaDB service
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Install Python MySQL dependencies
+      yum:
+        name: python3-PyMySQL
+        state: present
+
+    - name: Create a new database
+      become: true
+      mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+    - name: Create a database user
+      become: true
+      mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+  handlers:
+    - name: restarting_mariadb
+      service:
+        name: mariadb
+        state: restarted

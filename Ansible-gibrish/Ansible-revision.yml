@@ -1,0 +1,64 @@
+---
+- name: Installing HTTPD on Web Servers (CentOS)
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: Installing HTTPD
+      yum:
+        name: httpd
+        state: present
+
+    - name: Starting HTTPD
+      service:
+        name: httpd
+        state: started
+        enabled: true
+
+- name: Installing MariaDB on Database Servers (CentOS)
+  hosts: dbservers
+  become: true
+
+  tasks:
+    - name: Installing MariaDB
+      yum:
+        name: mariadb-server
+        state: present
+      notify: restart_mariadb
+
+    - name: Starting and Enabling MariaDB
+      service:
+        name: mariadb
+        state: started
+        enabled: true
+
+    - name: Installing Python MySQL Module
+      yum:
+        name: python3-PyMySQL
+        state: present
+
+    - name: Creating a Database
+      community.mysql.mysql_db:
+        name: "{{ db_name }}"
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+
+    - name: Creating a Database User
+      community.mysql.mysql_user:
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        priv: "{{ db_name }}.*:ALL"
+        state: present
+        login_unix_socket: /var/lib/mysql/mysql.sock
+    - name: Run a command and store the result
+      command: uptime
+      register: uptime_output
+    - name: Show uptime output
+      debug:
+        msg: "The system uptime is: {{ uptime_output }}"
+
+  handlers:
+    - name: restart_mariadb
+      service:
+        name: mariadb
+        state: restarted
