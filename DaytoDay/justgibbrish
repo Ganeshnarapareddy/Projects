@@ -1,0 +1,4 @@
+{
+  "Name": "@{concat('Upcoming CRQ - ', formatDateTime(utcNow(), 'yyyy-MM-dd'), '.', last(split(items('Apply_to_each')?['name'], '.')))}",
+  "ContentBytes": @{items('Apply_to_each')?['contentBytes']}
+}
